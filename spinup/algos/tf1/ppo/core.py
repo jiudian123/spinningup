@@ -31,15 +31,15 @@ def mlp(x, hidden_sizes=(32,), activation=tf.tanh, output_activation=None):
         x = tf.layers.dense(x, units=h, activation=activation)
     return tf.layers.dense(x, units=hidden_sizes[-1], activation=output_activation)
 
-def get_vars(scope=''):
+def get_vars(scope=''): #取得可训练变量
     return [x for x in tf.trainable_variables() if scope in x.name]
 
-def count_vars(scope=''):
+def count_vars(scope=''): #
     v = get_vars(scope)
-    return sum([np.prod(var.shape.as_list()) for var in v])
+    return sum([np.prod(var.shape.as_list()) for var in v]) #np.prod()计算所有元素乘积，var.shape获取var维度.as_list()转化为列表
 
-def gaussian_likelihood(x, mu, log_std):
-    pre_sum = -0.5 * (((x-mu)/(tf.exp(log_std)+EPS))**2 + 2*log_std + np.log(2*np.pi))
+def gaussian_likelihood(x, mu, log_std):#高斯分布似然函数 mu均值，logstd标准差
+    pre_sum = -0.5 * (((x-mu)/(tf.exp(log_std)+EPS))**2 + 2*log_std + np.log(2*np.pi)) 
     return tf.reduce_sum(pre_sum, axis=1)
 
 def discount_cumsum(x, discount):
@@ -57,7 +57,7 @@ def discount_cumsum(x, discount):
          x1 + discount * x2,
          x2]
     """
-    return scipy.signal.lfilter([1], [1, float(-discount)], x[::-1], axis=0)[::-1]
+    return scipy.signal.lfilter([1], [1, float(-discount)], x[::-1], axis=0)[::-1] #[::-1]顺序相反操作
 
 
 """
@@ -66,10 +66,10 @@ Policies
 
 def mlp_categorical_policy(x, a, hidden_sizes, activation, output_activation, action_space):
     act_dim = action_space.n
-    logits = mlp(x, list(hidden_sizes)+[act_dim], activation, None)
-    logp_all = tf.nn.log_softmax(logits)
-    pi = tf.squeeze(tf.multinomial(logits,1), axis=1)
-    logp = tf.reduce_sum(tf.one_hot(a, depth=act_dim) * logp_all, axis=1)
+    logits = mlp(x, list(hidden_sizes)+[act_dim], activation, None) 
+    logp_all = tf.nn.log_softmax(logits) #softmax结果取log
+    pi = tf.squeeze(tf.multinomial(logits,1), axis=1) #(tf.multinomial(logits,1)采样概率logits，采样个数1；删掉第一维的维度1
+    logp = tf.reduce_sum(tf.one_hot(a, depth=act_dim) * logp_all, axis=1) #动作a的概率
     logp_pi = tf.reduce_sum(tf.one_hot(pi, depth=act_dim) * logp_all, axis=1)
     return pi, logp, logp_pi
 
